@@ -1,0 +1,39 @@
+diff --git a/mesonbuild/linkers/detect.py b/mesonbuild/linkers/detect.py
+index 80e0948..f6ae848 100644
+--- a/mesonbuild/linkers/detect.py
++++ b/mesonbuild/linkers/detect.py
+@@ -29,6 +29,7 @@ from .linkers import (
+     SolarisDynamicLinker,
+     AIXDynamicLinker,
+     OptlinkDynamicLinker,
++    ZigCCDynamicLinker,
+ )
+ 
+ import re
+@@ -215,6 +216,9 @@ def guess_nix_linker(env: 'Environment', compiler: T.List[str], comp_class: T.Ty
+         linker = AIXDynamicLinker(
+             compiler, for_machine, comp_class.LINKER_PREFIX, override,
+             version=search_version(e))
++    elif o.startswith('zig ld'):
++        linker = ZigCCDynamicLinker(
++            compiler, for_machine, comp_class.LINKER_PREFIX, override, version=v)
+     else:
+         __failed_to_detect_linker(compiler, check_args, o, e)
+     return linker
+diff --git a/mesonbuild/linkers/linkers.py b/mesonbuild/linkers/linkers.py
+index 88b66be..fe40c7e 100644
+--- a/mesonbuild/linkers/linkers.py
++++ b/mesonbuild/linkers/linkers.py
+@@ -1401,6 +1401,12 @@ class AIXDynamicLinker(PosixDynamicLinkerMixin, DynamicLinker):
+     def thread_flags(self, env: 'Environment') -> T.List[str]:
+         return ['-pthread']
+ 
++class ZigCCDynamicLinker(LLVMDynamicLinker):
++    id = 'ld.zigcc'
++
++    def get_thinlto_cache_args(self, path: str) -> T.List[str]:
++        return []
++
+ 
+ class OptlinkDynamicLinker(VisualStudioLikeLinkerMixin, DynamicLinker):
+ 
